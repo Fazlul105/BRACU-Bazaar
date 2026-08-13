@@ -1,0 +1,22 @@
+{
+  "name": "bracu-bazaar-backend",
+  "version": "1.0.0",
+  "description": "Backend API for BRACU Bazaar marketplace",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["bracu", "marketplace", "mern"],
+  "author": "Md. Fazlul Karim",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongoose": "^8.5.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3"
+  }
+}
