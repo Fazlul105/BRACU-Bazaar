@@ -585,12 +585,12 @@ export const connectDB = async () => {
   const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bracu-bazaar';
   try {
     const conn = await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 2000
+      serverSelectionTimeoutMS: 10000
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     isMongoConnected = true;
   } catch (error) {
-    console.log(`MongoDB not running locally (${error.message}). Switched to high-performance local database store.`);
+    console.log(`MongoDB connection issue (${error.message}). Switched to high-performance local database store.`);
     isMongoConnected = false;
   }
 };
