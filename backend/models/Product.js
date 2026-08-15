@@ -41,9 +41,18 @@ const productSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  sellerName: String,
-  sellerStudentId: String,
-  sellerPhone: String,
+  sellerName: {
+    type: String,
+    default: 'BRACU Student'
+  },
+  sellerStudentId: {
+    type: String,
+    default: ''
+  },
+  sellerPhone: {
+    type: String,
+    default: ''
+  },
   meetupLocation: {
     type: String,
     required: [true, 'Meetup location is required'],

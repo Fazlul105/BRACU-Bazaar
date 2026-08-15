@@ -1,5 +1,6 @@
 import express from 'express';
-import { dbStore } from '../config/db.js';
+import Product from '../models/Product.js';
+import Review from '../models/Review.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -10,17 +11,40 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { category, condition, search, minPrice, maxPrice, sellerId } = req.query;
-    const products = await dbStore.getAllProducts({
-      category,
-      condition,
-      search,
-      minPrice,
-      maxPrice,
-      sellerId
-    });
+
+    const filter = {};
+
+    if (category && category !== 'All') {
+      filter.category = category;
+    }
+
+    if (condition && condition !== 'All') {
+      filter.condition = condition;
+    }
+
+    if (sellerId) {
+      filter.sellerId = sellerId;
+    }
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      filter.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { category: searchRegex }
+      ];
+    }
+
+    const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching products' });
+    res.status(500).json({ message: error.message || 'Error fetching products' });
   }
 });
 
@@ -29,14 +53,15 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const product = await dbStore.getProductById(req.params.id);
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product listing not found' });
     }
-    const reviews = await dbStore.getReviewsForProduct(req.params.id);
-    res.json({ ...product, reviews });
+
+    const reviews = await Review.find({ productId: req.params.id }).sort({ createdAt: -1 });
+    res.json({ ...product.toObject(), reviews });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching product details' });
+    res.status(500).json({ message: error.message || 'Error fetching product details' });
   }
 });
 
@@ -54,7 +79,7 @@ router.post('/', protect, async (req, res) => {
     const defaultImage = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600';
     const productImages = (images && images.length > 0) ? images : [defaultImage];
 
-    const newProduct = await dbStore.createProduct({
+    const newProduct = await Product.create({
       title: title.trim(),
       description: description.trim(),
       price: Number(price),
@@ -79,7 +104,7 @@ router.post('/', protect, async (req, res) => {
 // @access  Private (Seller owner or Admin)
 router.put('/:id', protect, async (req, res) => {
   try {
-    const product = await dbStore.getProductById(req.params.id);
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product listing not found' });
     }
@@ -94,17 +119,22 @@ router.put('/:id', protect, async (req, res) => {
 
     const { title, description, price, category, condition, images, meetupLocation, phone, status } = req.body;
 
-    const updatedProduct = await dbStore.updateProduct(req.params.id, {
-      title: title !== undefined ? title.trim() : product.title,
-      description: description !== undefined ? description.trim() : product.description,
-      price: price !== undefined ? Number(price) : product.price,
-      category: category || product.category,
-      condition: condition || product.condition,
-      images: (images && images.length > 0) ? images : product.images,
-      meetupLocation: meetupLocation || product.meetupLocation,
-      sellerPhone: phone || product.sellerPhone,
-      status: status || product.status
-    });
+    const updateData = {};
+    if (title !== undefined) updateData.title = title.trim();
+    if (description !== undefined) updateData.description = description.trim();
+    if (price !== undefined) updateData.price = Number(price);
+    if (category !== undefined) updateData.category = category;
+    if (condition !== undefined) updateData.condition = condition;
+    if (images && images.length > 0) updateData.images = images;
+    if (meetupLocation !== undefined) updateData.meetupLocation = meetupLocation;
+    if (phone !== undefined) updateData.sellerPhone = phone;
+    if (status !== undefined) updateData.status = status;
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
 
     res.json(updatedProduct);
   } catch (error) {
@@ -117,7 +147,7 @@ router.put('/:id', protect, async (req, res) => {
 // @access  Private (Seller owner or Admin)
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const product = await dbStore.getProductById(req.params.id);
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -130,10 +160,12 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this listing' });
     }
 
-    await dbStore.deleteProduct(req.params.id);
+    await Product.findByIdAndDelete(req.params.id);
+    await Review.deleteMany({ productId: req.params.id });
+
     res.json({ message: 'Product listing removed successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting product' });
+    res.status(500).json({ message: error.message || 'Error deleting product' });
   }
 });
 

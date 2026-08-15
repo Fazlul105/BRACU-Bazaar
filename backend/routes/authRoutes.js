@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { dbStore } from '../config/db.js';
+import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -40,12 +40,12 @@ router.post('/register', async (req, res) => {
     }
 
     // 3. Check existing user
-    const existingStudent = await dbStore.findUserByStudentId(studentId.trim());
+    const existingStudent = await User.findOne({ studentId: studentId.trim() });
     if (existingStudent) {
       return res.status(400).json({ message: `Student ID ${studentId} is already registered on BRACU Bazaar.` });
     }
 
-    const existingEmail = await dbStore.findUserByEmail(email.trim());
+    const existingEmail = await User.findOne({ email: email.trim().toLowerCase() });
     if (existingEmail) {
       return res.status(400).json({ message: `Email ${email} is already registered.` });
     }
@@ -56,12 +56,11 @@ router.post('/register', async (req, res) => {
       assignedRole = 'admin';
     }
 
-    // 4. Create user
-    const newUser = await dbStore.createUser({
+    // 4. Create user in MongoDB
+    const newUser = await User.create({
       name: name.trim(),
       studentId: studentId.trim(),
-      email: email.trim(),
-      password,
+      email: email.trim().toLowerCase(),
       passwordHash: bcrypt.hashSync(password, 10),
       role: assignedRole,
       phone: phone ? phone.trim() : '',
@@ -98,11 +97,13 @@ router.post('/login', async (req, res) => {
 
     const query = studentIdOrEmail.trim();
 
-    // Find by Student ID or Email
-    let user = await dbStore.findUserByStudentId(query);
-    if (!user) {
-      user = await dbStore.findUserByEmail(query);
-    }
+    // Find by Student ID or Email in MongoDB
+    const user = await User.findOne({
+      $or: [
+        { studentId: query },
+        { email: query.toLowerCase() }
+      ]
+    });
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid Student ID/Email or password' });

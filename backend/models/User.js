@@ -10,8 +10,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Student ID is required'],
     unique: true,
-    trim: true,
-    match: [/^\d{8}$/, 'Student ID must be exactly 8 digits']
+    trim: true
   },
   email: {
     type: String,
@@ -20,9 +19,9 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
-  password: {
+  passwordHash: {
     type: String,
-    required: [true, 'Password is required']
+    required: [true, 'Password hash is required']
   },
   role: {
     type: String,

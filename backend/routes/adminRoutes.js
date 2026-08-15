@@ -1,5 +1,6 @@
 import express from 'express';
-import { dbStore } from '../config/db.js';
+import User from '../models/User.js';
+import Product from '../models/Product.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -13,10 +14,10 @@ router.use(admin);
 // @access  Admin only (Md. Fazlul Karim)
 router.get('/users', async (req, res) => {
   try {
-    const users = await dbStore.getAllUsers();
+    const users = await User.find().select('-passwordHash').sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving platform users' });
+    res.status(500).json({ message: error.message || 'Error retrieving platform users' });
   }
 });
 
@@ -33,10 +34,14 @@ router.post('/kickout/:id', async (req, res) => {
       return res.status(400).json({ message: 'Admin cannot kick out their own admin account' });
     }
 
-    const bannedUser = await dbStore.banUser(
-      userId, 
-      reason || 'Kicked out by Admin Md. Fazlul Karim due to policy violation'
-    );
+    const bannedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        isBanned: true,
+        bannedReason: reason || 'Kicked out by Admin Md. Fazlul Karim due to policy violation'
+      },
+      { new: true }
+    ).select('-passwordHash');
 
     if (!bannedUser) {
       return res.status(404).json({ message: 'User not found' });
@@ -47,7 +52,7 @@ router.post('/kickout/:id', async (req, res) => {
       user: bannedUser 
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error kicking out user' });
+    res.status(500).json({ message: error.message || 'Error kicking out user' });
   }
 });
 
@@ -56,13 +61,22 @@ router.post('/kickout/:id', async (req, res) => {
 // @access  Admin only
 router.post('/unban/:id', async (req, res) => {
   try {
-    const unbannedUser = await dbStore.unbanUser(req.params.id);
+    const unbannedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        isBanned: false,
+        bannedReason: ''
+      },
+      { new: true }
+    ).select('-passwordHash');
+
     if (!unbannedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     res.json({ message: `User ${unbannedUser.name} reinstated successfully.`, user: unbannedUser });
   } catch (error) {
-    res.status(500).json({ message: 'Error unbanning user' });
+    res.status(500).json({ message: error.message || 'Error unbanning user' });
   }
 });
 
@@ -75,13 +89,18 @@ router.delete('/users/:id', async (req, res) => {
     if (userId.toString() === req.user._id.toString()) {
       return res.status(400).json({ message: 'Admin account cannot be deleted' });
     }
-    const deletedUser = await dbStore.deleteUser(userId);
+
+    const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Clean up listings by this user
+    await Product.deleteMany({ sellerId: userId });
+
     res.json({ message: `User ${deletedUser.name} deleted permanently.` });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting user' });
+    res.status(500).json({ message: error.message || 'Error deleting user' });
   }
 });
 
@@ -90,24 +109,25 @@ router.delete('/users/:id', async (req, res) => {
 // @access  Admin only
 router.get('/stats', async (req, res) => {
   try {
-    const users = await dbStore.getAllUsers();
-    const products = await dbStore.getAllProducts();
-
-    const buyers = users.filter(u => u.role === 'buyer');
-    const sellers = users.filter(u => u.role === 'seller' || u.role === 'both');
-    const bannedUsers = users.filter(u => u.isBanned);
+    const [totalUsers, totalBuyers, totalSellers, bannedUsersCount, totalProducts] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'buyer' }),
+      User.countDocuments({ role: { $in: ['seller', 'both'] } }),
+      User.countDocuments({ isBanned: true }),
+      Product.countDocuments()
+    ]);
 
     res.json({
-      totalUsers: users.length,
-      totalBuyers: buyers.length,
-      totalSellers: sellers.length,
-      bannedUsersCount: bannedUsers.length,
-      totalProducts: products.length,
+      totalUsers,
+      totalBuyers,
+      totalSellers,
+      bannedUsersCount,
+      totalProducts,
       adminName: 'Md. Fazlul Karim',
       adminStudentId: '23101229'
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching admin stats' });
+    res.status(500).json({ message: error.message || 'Error fetching admin stats' });
   }
 });
 
