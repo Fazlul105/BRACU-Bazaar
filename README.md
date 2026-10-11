@@ -17,11 +17,11 @@
 ## 📌 Table of Contents
 
 - [Overview & Problem Statement](#-overview--problem-statement)
-- [Key Features & Functional Modules](#-key-features--functional-modules)
-  - [Member 1 — Product Marketplace](#member-1--product-marketplace)
-  - [Member 2 — Seller Functionality](#member-2--seller-functionality)
-  - [Member 3 — Cart & Order Management](#member-3--cart--order-management)
-  - [Member 4 — Communication & Moderation](#member-4--communication--moderation)
+- [Key Features & Platform Modules](#-key-features--platform-modules)
+  - [1. Campus Marketplace & Discovery](#1-campus-marketplace--discovery)
+  - [2. Seller & Listing Management](#2-seller--listing-management)
+  - [3. Cart, Checkout & Order Tracking](#3-cart-checkout--order-tracking)
+  - [4. Real-Time Chat & Admin Moderation](#4-real-time-chat--admin-moderation)
 - [System Architecture & Tech Stack](#-system-architecture--tech-stack)
 - [Directory Structure](#-directory-structure)
 - [Database Models & Schemas](#-database-models--schemas)
@@ -53,32 +53,32 @@ At the start of every academic semester, BRACU students face recurring challenge
 
 ---
 
-## 🚀 Key Features & Functional Modules
+## 🚀 Key Features & Platform Modules
 
-The project is structured around 20 core functional requirements distributed across four key member focus areas:
+BRACU Bazaar is designed as an end-to-end full-stack campus commerce solution featuring 20 comprehensive capabilities:
 
-### Member 1 — Product Marketplace
+### 1. Campus Marketplace & Discovery
 1. **Browse All Product Listings**: Intuitive responsive gallery displaying all available items with images, pricing, categories, and condition badges.
 2. **Keyword Search**: Real-time search engine querying product titles, descriptions, and categories.
 3. **Category & Condition Filtering**: Filter by categories (*Textbooks & Notes*, *Calculators & Lab Gear*, *Electronics & Gadgets*, *Hostel Essentials*, *Fashion & Merchandise*, *Sports & Gaming*) and conditions (*Brand New*, *Like New*, *Good*, *Fair*).
 4. **Dynamic Price & Pagination Controls**: Filter by minimum/maximum price bounds and view catalog items cleanly.
 5. **Detailed Product View**: Deep dive into individual items showing seller information, phone numbers, exact campus meetup points, and verified peer reviews.
 
-### Member 2 — Seller Functionality
+### 2. Seller & Listing Management
 6. **Create New Listings**: Seamless listing form with title, course/item description, category, price in BDT, and preferred campus meetup spot.
 7. **Image Support**: Upload product image URLs and previews with responsive aspect-ratio rendering.
 8. **Edit Listings**: Full editing capabilities for item owners to update prices, descriptions, images, or availability status (`available`, `reserved`, `sold`).
 9. **Delete Listings**: Safe deletion of personal listings along with associated review data cleanup.
 10. **Seller Inventory Dashboard (`/my-listings`)**: Dedicated view for sellers to monitor, toggle availability, edit, and manage all their active and historical listings.
 
-### Member 3 — Cart & Order Management
+### 3. Cart, Checkout & Order Tracking
 11. **Slide-Out Cart Drawer**: Persistent interactive drawer accessible across the entire application without losing browsing context.
 12. **Quantity & Cart Management**: Real-time quantity adjustment, item removal, and subtotal calculation stored via local state.
 13. **Campus Checkout Form**: Collects buyer contact details, department, phone number, and selected campus handover venue.
 14. **Order Placement & Invoicing**: Automated calculation of subtotal, zero commission delivery fee, and generation of a unique order tracking code (`BB-XXXXXX`).
 15. **Personal Order History (`/my-orders`)**: Comprehensive order timeline displaying status tracking (*Pending Verification* ➔ *Confirmed by Seller* ➔ *Ready for Meetup* ➔ *Completed*).
 
-### Member 4 — Communication & Moderation
+### 4. Real-Time Chat & Admin Moderation
 16. **Direct Peer Messaging (`/messages`)**: Private message exchange between buyers and sellers directly linked to specific product inquiries.
 17. **Conversation Threads & Unread Indicators**: Real-time conversation grouping with automatic unread message counts and navigation badge alerts.
 18. **Community Report System**: Modal dialog allowing any student to flag inappropriate listings or abusive user accounts with detailed reasons.
@@ -192,7 +192,7 @@ BRACU Bazaar/
 │   ├── tailwind.config.js        # Tailwind CSS palette & extensions
 │   └── vite.config.js            # Vite configuration with /api reverse proxy
 │
-├── Project Features.docx         # Functional feature breakdown by team members
+├── Project Features.docx         # Functional feature documentation
 └── README.md                     # Comprehensive project documentation
 ```
 
@@ -355,7 +355,7 @@ To maintain zero fraud and ensure personal safety, all transactions are encourag
   - 🏢 *Mohakhali Campus — UB2 / Gate 1 Entrance*
   - 🛏️ *Residential Campus / Hostel Cafeteria*
 - **Inspection First**: Always inspect physical books, electronics, or calculator functionality before handing over cash.
-- **Reporting Mechanism**: If any seller attempts an external courier scam or misrepresents items, click **Report Listing** to notify the admin team immediately.
+- **Reporting Mechanism**: If any seller attempts an external courier scam or misrepresents items, click **Report Listing** to notify the administrator immediately.
 
 ---
 
@@ -377,9 +377,9 @@ The backend can be hosted on platforms such as Render, Railway, or AWS EC2 with 
 
 ---
 
-## 👨‍💻 Project Author & Credits
+## 👨‍💻 Project Developer & Credits
 
-- **Project Lead & Super Admin**: **Md. Fazlul Karim**
+- **Full-Stack Developer & Super Admin**: **Md. Fazlul Karim**
 - **Student ID**: `23101229`
 - **Institution**: BRAC University (BRACU)
 - **Live Website**: [https://bracubazaar.netlify.app/](https://bracubazaar.netlify.app/)
